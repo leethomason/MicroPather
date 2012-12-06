@@ -1,0 +1,30 @@
+SpeedTest binaryHash=false list=false debug=false
+Average of 389 runs. Reset=false. Dir=4.
+short(  85, cutoff=22.0)= 31
+med  ( 119, cutoff=45.0)= 121
+long ( 146)             = 354
+fail (  13) short       = 406
+fail (  26) long        = 469
+Average                = 276
+Average of 389 runs. Reset=true. Dir=4.
+short(  85, cutoff=22.0)= 26
+med  ( 119, cutoff=45.0)= 102
+long ( 146)             = 325
+fail (  13) short       = 432
+fail (  26) long        = 495
+Average                = 276
+Average of 389 runs. Reset=false. Dir=8.
+short( 113, cutoff=22.0)= 27
+med  ( 124, cutoff=45.0)= 103
+long ( 113)             = 268
+fail (  13) short       = 452
+fail (  26) long        = 503
+Average                = 270
+Average of 389 runs. Reset=true. Dir=8.
+short( 113, cutoff=22.0)= 38
+med  ( 124, cutoff=45.0)= 157
+long ( 113)             = 430
+fail (  13) short       = 675
+fail (  26) long        = 688
+Average                = 397
+Composite average = 305
