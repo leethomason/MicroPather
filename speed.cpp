@@ -212,7 +212,6 @@ int main( int argc, const char* argv[] )
 	
 	int   indexArray[ NUM_TEST ];
 	float costArray[ NUM_TEST ];
-//	unsigned   checksumArray[ NUM_TEST ];
 	U64   timeArray[ NUM_TEST ];
 	int   resultArray[ NUM_TEST ];
 
@@ -266,9 +265,6 @@ int main( int argc, const char* argv[] )
 
 		for( int reset=0; reset<=1; ++reset )
 		{
-//			if ( reset && numDir > PathNode::MAX_CACHE )
-//				continue;	// setting makes no sense - shouldn't cache when cache too small
-
 			clock_t clockStart = clock();
 			for( i=0; i<NUM_TEST; ++i ) 
 			{
@@ -282,19 +278,7 @@ int main( int argc, const char* argv[] )
 				resultArray[i] = dungeon.aStar->Solve( (void*)startState, (void*)endState, &dungeon.path, &costArray[i] );
 				U64 end = FastTime();
 
-//				if ( !reset )
-//					checksumArray[i] = 0;
 				timeArray[i] = end-start;
-
-				if ( resultArray[i] == MicroPather::SOLVED ) 
-				{
-//					if ( !reset ) {
-//						checksumArray[i] = dungeon.aStar->Checksum();
-//					}
-//					else {
-//						MPASSERT( checksumArray[i] == dungeon.aStar->Checksum() );
-//					}
-				}			
 			}
 			clock_t clockEnd = clock();
 

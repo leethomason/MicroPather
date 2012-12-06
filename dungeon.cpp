@@ -263,43 +263,6 @@ class Dungeon
 
 int main( int /*argc*/, const char** /*argv*/ )
 {
-	{
-		// Run the test code.
-		Dungeon test;
-
-		const int NUM_TEST = 5;
-		int tx[NUM_TEST]	= {	24,	25,	10,	6,	0	};	// x of test
-		int ty[NUM_TEST]	= {	9,	9,	5,	5,	0	};	// y of test
-		int door[NUM_TEST]	= {	0,	0,	0,	1,	0	};	// toggle door? (before move)
-		int result[NUM_TEST]= { MicroPather::SOLVED, MicroPather::SOLVED, MicroPather::NO_SOLUTION,
-								MicroPather::SOLVED, MicroPather::SOLVED };
-		//unsigned check[NUM_TEST]	= { 139640, 884, 0, 129313, 2914 };
-
-		for( int i=0; i<NUM_TEST; ++i )
-		{
-			if ( door[i] )
-				test.ToggleDoor();
-			int _result = test.SetPos( tx[i], ty[i] );
-
-			if ( _result == result[i] )	{
-				// result good.
-				if ( _result == MicroPather::SOLVED ) {
-					//if ( test.Checksum() == check[i] )
-					//	printf( ">> Test %d to (%d,%d) ok\n", i, tx[i], ty[i] );
-					//else
-					//	printf( ">> Test %d to (%d,%d) BAD CHECKSUM\n", i, tx[i], ty[i] );
-				}
-				else {
-					printf( ">> Test %d to (%d,%d) ok\n", i, tx[i], ty[i] );
-				}
-			}
-			else {
-				printf( ">> Test %d to (%d,%d) BAD RESULT\n", i, tx[i], ty[i] );
-			}
-		}
-	}
-
-
 	Dungeon dungeon;
 	bool done = false;
 	char buf[ 256 ];

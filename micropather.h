@@ -33,11 +33,9 @@ distribution.
 	C++ that can be easily integrated into existing code. MicroPather focuses on being a path 
 	finding engine for video games but is a generic A* solver. MicroPather is open source, with 
 	a license suitable for open source or commercial use.
-
-	An overview of using MicroPather is in the <A HREF="../readme.htm">readme</A> or
-	on the Grinning Lizard website: http://grinninglizard.com/micropather/
 */
 
+// This probably works to remove, but isn't currently tested in STL mode.
 #define GRINLIZ_NO_STL
 
 #ifdef GRINLIZ_NO_STL
@@ -78,14 +76,13 @@ distribution.
 	typedef unsigned MP_UPTR;
 #endif
 
-//#define MICROPATHER_STRESS
-
 namespace micropather
 {
 #ifdef GRINLIZ_NO_STL
 
-	/* WARNING: incompatible vector replacement. Does everything needed to replace std::vector
-	   for micropather, but not a compatible replacement. MPVector doesn't correctly call constructors or destructors.
+	/* WARNING: vector partial replacement. Does everything needed to replace std::vector
+	   for micropather, but only works on Plain Old Data types. Doesn't call copy/construct/destruct
+	   correctly for general use.
 	 */
 	template <typename T>
 	class MPVector {
@@ -350,7 +347,7 @@ namespace micropather
 
 	/* Used to cache results of paths. Much, much faster
 	   to return an existing solution than to calculate
-	   a new one.
+	   a new one. A post on this is here: http://grinninglizard.com/altera/programming/a-path-caching-2/
 	*/
 	class PathCache
 	{
@@ -444,13 +441,15 @@ namespace micropather
 								  will only need one main memory allocation. For a chess board, allocate 
 								  would be set to 8x8 (64)
 								- If your map is large, something like 1/4 the number of possible
-								  states is good. For example, Lilith3D normally has about 16,000 
-								  states, so 'allocate' should be about 4000.
+								  states is good.
 							    - If your state space is huge, use a multiple (5-10x) of the normal
 								  path. "Occasionally" call Reset() to free unused memory.
 			@param typicalAdjacent	Used to determine cache size. The typical number of adjacent states
 									to a given state. (On a chessboard, 8.) Higher values use a little
 									more memory.
+			@param cache		Turn on path caching. Uses more memory (yet again) but at a huge speed
+								advantage if you may call the pather with the same path or sub-path, which
+								is common for pathing over maps in games.
 		*/
 		MicroPather( Graph* graph, unsigned allocate = 250, unsigned typicalAdjacent=6, bool cache=true );
 		~MicroPather();
