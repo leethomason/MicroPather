@@ -74,6 +74,7 @@ Integrating MicroPather Into Your Code
 Nothing could by simpler! Or at least that's the goal. More importantly, none 
 of your game data structures need to change to use MicroPather. The steps, in 
 brief, are:
+
 1. Include MicroPather files</p>
 2. Implement the Graph interface</p>
 3. Call the Solver</p>
