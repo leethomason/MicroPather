@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2000-2012 Lee Thomason (www.grinninglizard.com)
+Copyright (c) 2000-2013 Lee Thomason (www.grinninglizard.com)
 Micropather
 
 This software is provided 'as-is', without any express or implied 
@@ -400,6 +400,7 @@ namespace micropather
 	};
 
 	struct CacheData {
+		CacheData() : nBytesAllocated(0), nBytesUsed(0), memoryFraction(0), hit(0), miss(0), hitFraction(0) {}
 		int nBytesAllocated;
 		int nBytesUsed;
 		float memoryFraction;

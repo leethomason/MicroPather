@@ -176,5 +176,6 @@ Some guidelines:
   object, for example) but that dramatically reduces usability.
 
 Thanks for checking out MicroPather!
+
 Lee Thomason
  

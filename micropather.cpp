@@ -468,6 +468,9 @@ MicroPather::MicroPather( Graph* _graph, unsigned allocate, unsigned typicalAdja
 		graph( _graph ),
 		frame( 0 )
 {
+	MPASSERT( allocate );
+	MPASSERT( typicalAdjacent );
+	pathCache = 0;
 	if ( cache ) {
 		pathCache = new PathCache( allocate*4 );	// untuned arbitrary constant	
 	}
@@ -732,6 +735,10 @@ void PathCache::Add( const MP_VECTOR< void* >& path, const MP_VECTOR< float >& c
 
 void PathCache::AddNoSolution( void* end, void* states[], int count )
 {
+	if ( count + nItems > allocated*3/4 ) {
+		return;
+	}
+
 	for( int i=0; i<count; ++i ) {
 		Item item = { states[i], end, 0, FLT_MAX };
 		AddItem( item );
@@ -767,6 +774,7 @@ int PathCache::Solve( void* start, void* end, MP_VECTOR< void* >* path, float* t
 
 void PathCache::AddItem( const Item& item )
 {
+	MPASSERT( allocated );
 	unsigned index = item.Hash() % allocated;
 	while( true ) {
 		if ( mem[index].Empty() ) {
@@ -791,6 +799,7 @@ void PathCache::AddItem( const Item& item )
 
 const PathCache::Item* PathCache::Find( void* start, void* end )
 {
+	MPASSERT( allocated );
 	Item fake = { start, end, 0, 0 };
 	unsigned index = fake.Hash() % allocated;
 	while( true ) {
@@ -818,7 +827,12 @@ void MicroPather::GetCacheData( CacheData* data )
 
 		data->hit = pathCache->hit;
 		data->miss = pathCache->miss;
+		if ( data->hit + data->miss ) {
 		data->hitFraction = (float)( (double)(data->hit) / (double)(data->hit + data->miss) );
+	}
+		else {
+			data->hitFraction = 0;
+		}
 	}
 }
 
