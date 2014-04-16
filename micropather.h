@@ -69,6 +69,7 @@ distribution.
 	#include <stdlib.h>
 	typedef uintptr_t		MP_UPTR;
 #elif defined (__GNUC__) && (__GNUC__ >= 3 )
+	#include <stdint.h>
 	#include <stdlib.h>
 	typedef uintptr_t		MP_UPTR;
 #else
