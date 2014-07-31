@@ -158,6 +158,11 @@ namespace micropather
 		virtual ~Graph() {}
 	  
 		/**
+			Return true or false depending on whether two nodes are to be considered equal or not. 
+		*/
+		virtual bool NodesEqual(void* a, void* b) = 0;
+
+		/**
 			Return the least possible cost between 2 states. For example, if your pathfinding 
 			is based on distance, this is simply the straight distance between 2 points on the 
 			map. If you pathfinding is based on minimum time, it is the minimal travel time 
@@ -179,6 +184,7 @@ namespace micropather
 			without an ending newline.
 		*/
 		virtual void  PrintStateInfo( void* state ) = 0;
+
 	};
 
 
