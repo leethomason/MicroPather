@@ -836,6 +836,8 @@ void MicroPather::GetCacheData( CacheData* data )
 	}
 }
 
+
+
 int MicroPather::Solve( void* startNode, void* endNode, MP_VECTOR< void* >* path, float* cost )
 {
 	// Important to clear() in case the caller doesn't check the return code. There

@@ -184,7 +184,6 @@ namespace micropather
 			without an ending newline.
 		*/
 		virtual void  PrintStateInfo( void* state ) = 0;
-
 	};
 
 
