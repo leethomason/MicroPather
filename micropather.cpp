@@ -836,8 +836,6 @@ void MicroPather::GetCacheData( CacheData* data )
 	}
 }
 
-
-
 int MicroPather::Solve( void* startNode, void* endNode, MP_VECTOR< void* >* path, float* cost )
 {
 	// Important to clear() in case the caller doesn't check the return code. There
@@ -889,7 +887,7 @@ int MicroPather::Solve( void* startNode, void* endNode, MP_VECTOR< void* >* path
 	{
 		PathNode* node = open.Pop();
 		
-		if ( node->state == endNode )
+		if ( graph->NodesEqual(node->state, endNode) )
 		{
 			GoalReached( node, startNode, endNode, path );
 			*cost = node->costFromStart;
