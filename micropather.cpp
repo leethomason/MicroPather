@@ -672,6 +672,15 @@ void MicroPather::StatesInPool( MP_VECTOR< void* >* stateVec )
 }
 
 
+void MicroPather::setGraph( Graph * g )
+{
+    if( g != graph )
+        Reset();
+    
+    graph = g;
+}
+
+
 void PathNodePool::AllStates( unsigned frame, MP_VECTOR< void* >* stateVec )
 {	
     for ( Block* b=blocks; b; b=b->nextBlock )

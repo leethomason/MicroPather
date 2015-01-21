@@ -434,6 +434,7 @@ namespace micropather
 			the Graph callbacks.
 
 			@param graph		The "map" that implements the Graph callbacks.
+                                if not specified, you can setGraph() later on
 			@param allocate		How many states should be internally allocated at a time. This
 								can be hard to get correct. The higher the value, the more memory
 								MicroPather will use.
@@ -452,7 +453,7 @@ namespace micropather
 								advantage if you may call the pather with the same path or sub-path, which
 								is common for pathing over maps in games.
 		*/
-		MicroPather( Graph* graph, unsigned allocate = 250, unsigned typicalAdjacent=6, bool cache=true );
+		MicroPather( Graph* graph = 0, unsigned allocate = 250, unsigned typicalAdjacent=6, bool cache=true );
 		~MicroPather();
 
 		/**
@@ -486,6 +487,8 @@ namespace micropather
 		void StatesInPool( MP_VECTOR< void* >* stateVec );
 		void GetCacheData( CacheData* data );
 
+        void setGraph( Graph * g );
+        
 	  private:
 		MicroPather( const MicroPather& );	// undefined and unsupported
 		void operator=( const MicroPather ); // undefined and unsupported
