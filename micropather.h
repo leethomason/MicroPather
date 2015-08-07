@@ -53,15 +53,19 @@ distribution.
 #endif
 
 
-#if defined( _DEBUG )
-#	if defined( _MSC_VER )
-#		define MPASSERT( x )		if ( !(x)) { _asm { int 3 } }
-#	else
-#		include <assert.h>
-#		define MPASSERT assert
-#	endif
-#else
-#	define MPASSERT( x ) {}
+#if defined(DEBUG)
+#   if defined(_MSC_VER)
+#       // "(void)0," is for suppressing C4127 warning in "assert(false)", "assert(true)" and the like
+#       define MPASSERT( x )           if ( !((void)0,(x))) { __debugbreak(); } //if ( !(x)) WinDebugBreak()
+#   elif defined (ANDROID_NDK)
+#       include <android/log.h>
+#       define MPASSERT( x )           if ( !(x)) { __android_log_assert( "assert", "grinliz", "ASSERT in '%s' at %d.", __FILE__, __LINE__ ); }
+#   else
+#       include <assert.h>
+#       define MPASSERT                assert
+#   endif
+#   else
+#       define MPASSERT( x )           {}
 #endif
 
 
