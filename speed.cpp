@@ -26,7 +26,6 @@ distribution.
 #include <memory.h>
 #include <math.h>
 #include <time.h>
-#include <chrono>
 #include <limits.h>
 
 #include <vector>
@@ -43,10 +42,38 @@ typedef unsigned long long U64;
 #endif
 typedef unsigned int U32;
 
+#ifdef _MSC_VER
 inline U64 FastTime()
-{ 
-	return static_cast<U64>(std::chrono::high_resolution_clock::now().time_since_epoch().count()); 
-} 
+{
+	union 
+	{
+		U64 result;
+		struct
+		{
+			U32 lo;
+			U32 hi;
+		} split;
+	} u;
+	u.result = 0;
+
+	_asm {
+		//pushad;	// don't need - aren't using "emit"
+		cpuid;		// force all previous instructions to complete - else out of order execution can confuse things
+		rdtsc;
+		mov u.split.hi, edx;
+		mov u.split.lo, eax;
+		//popad;
+	}				
+	return u.result;
+}
+#else
+#define rdtscll(val)  __asm__ __volatile__ ("rdtsc" : "=A" (val))
+inline U64 FastTime() {
+    U64 val;
+ 	rdtscll( val );
+ 	return val;     
+}    
+#endif
 
 inline int TimeDiv( U64 time, int count )
 {
