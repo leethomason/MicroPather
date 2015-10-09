@@ -36,31 +36,23 @@ distribution.
 using namespace micropather;
 
 #ifdef _MSC_VER
+#include <Windows.h>
+// The std::chronos high resolution clocks are no where near accurate enough on Windows 10.
+// Many calls come back at 0 time. 
 typedef uint64_t TimePoint;
 
-inline uint64_t FastTime() 
+inline uint64_t FastTime()
 {
-	union {
-		uint64_t result;
-		struct {
-			uint32_t lo;
-			uint32_t hi;
-		} split;
-	} u;
-	u.result = 0;
-
-	_asm {
-		cpuid;		// force all previous instructions to complete - else out of order execution can confuse things
-		rdtsc;
-		mov u.split.hi, edx;
-		mov u.split.lo, eax;
-	}				
-	return u.result;
+	uint64_t t;
+	QueryPerformanceCounter((LARGE_INTEGER*)&t);
+	return t;
 }
 
 inline int64_t Nanoseconds(TimePoint start, TimePoint end)
 {
-	return end - start;
+	uint64_t freq;
+	QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
+	return (end - start) * 1000 * 1000 * 1000 / freq;
 }
 #else
 typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;
