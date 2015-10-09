@@ -130,7 +130,7 @@ class Dungeon : public Graph
 
 	void NodeToXY( void* node, int* x, int* y ) 
 	{
-		int index = (int)node;
+		int index = (int)((intptr_t)node);
 		*y = index / MAPX;
 		*x = index - *y * MAPX;
 	}
@@ -332,7 +332,7 @@ int main( int argc, const char* argv[] )
 			#endif
 		}
 	}
-	printf( "Composite average = %7.2f\n", double(compositeScore) / (5*4) * 0.001);
+	printf( "Composite average = %7.2f\n", double(compositeScore) / 4 * 0.001);
 
 	return 0;
 }
