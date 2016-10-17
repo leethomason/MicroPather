@@ -208,11 +208,7 @@ namespace micropather
 					float _estToGoal, 
 					PathNode* _parent );
 
-		void Clear() {
-			memset( this, 0, sizeof( PathNode ) );
-			numAdjacent = -1;
-			cacheIndex  = -1;
-		}
+		void Clear();
 		void InitSentinel() {
 			Clear();
 			Init( 0, 0, FLT_MAX, FLT_MAX, 0 );
@@ -307,12 +303,7 @@ namespace micropather
 
 		// Get neighbors from the cache
 		// Note - always access this with an offset. Can get re-allocated.
-		void GetCache( int start, int nNodes, NodeCost* nodes ) {
-			MPASSERT( start >= 0 && start < cacheCap );
-			MPASSERT( nNodes > 0 );
-			MPASSERT( start + nNodes <= cacheCap );
-			memcpy( nodes, &cache[start], sizeof(NodeCost)*nNodes );
-		}
+		void GetCache( int start, int nNodes, NodeCost* nodes );
 
 		// Return all the allocated states. Useful for visuallizing what
 		// the pather is doing.
