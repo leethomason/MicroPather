@@ -903,7 +903,7 @@ int MicroPather::Solve( void* startNode, void* endNode, MP_VECTOR< void* >* path
 	{
 		PathNode* node = open.Pop();
 		
-		if ( node->state == endNode )
+		if ( graph->NodesEqual(node->state, endNode) )
 		{
 			GoalReached( node, startNode, endNode, path );
 			*cost = node->costFromStart;
