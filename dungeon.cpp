@@ -194,7 +194,7 @@ class Dungeon
 
 	void NodeToXY( void* node, int* x, int* y ) 
 	{
-		int index = (int)node;
+		intptr_t index = (intptr_t)node;
 		*y = index / MAPX;
 		*x = index - *y * MAPX;
 	}

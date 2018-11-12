@@ -28,7 +28,6 @@ distribution.
 #pragma warning( disable : 4530 )	// Exception handler isn't used
 #endif
 
-//#include <vector>
 #include <memory.h>
 #include <stdio.h>
 
@@ -43,7 +42,6 @@ distribution.
 
 #include "micropather.h"
 
-using namespace std;
 using namespace micropather;
 
 class OpenQueue
@@ -260,6 +258,14 @@ bool PathNodePool::PushCache( const NodeCost* nodes, int nNodes, int* start ) {
 }
 
 
+void PathNodePool::GetCache( int start, int nNodes, NodeCost* nodes ) {
+	MPASSERT( start >= 0 && start < cacheCap );
+	MPASSERT( nNodes > 0 );
+	MPASSERT( start + nNodes <= cacheCap );
+	memcpy( nodes, &cache[start], sizeof(NodeCost)*nNodes );
+}
+
+
 void PathNodePool::Clear()
 {
 #ifdef TRACK_COLLISION
@@ -463,6 +469,14 @@ void PathNode::Init(	unsigned _frame,
 	inClosed = 0;
 }
 
+
+void PathNode::Clear()
+{
+	memset( this, 0, sizeof( PathNode ) );
+	numAdjacent = -1;
+	cacheIndex  = -1;
+}
+
 MicroPather::MicroPather( Graph* _graph, unsigned allocate, unsigned typicalAdjacent, bool cache )
 	:	pathNodePool( allocate, typicalAdjacent ),
 		graph( _graph ),
@@ -482,7 +496,7 @@ MicroPather::~MicroPather()
 	delete pathCache;
 }
 
-	      
+
 void MicroPather::Reset()
 {
 	pathNodePool.Clear();

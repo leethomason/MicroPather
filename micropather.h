@@ -53,15 +53,19 @@ distribution.
 #endif
 
 
-#if defined( _DEBUG )
-#	if defined( _MSC_VER )
-#		define MPASSERT( x )		if ( !(x)) { _asm { int 3 } }
-#	else
-#		include <assert.h>
-#		define MPASSERT assert
-#	endif
-#else
-#	define MPASSERT( x ) {}
+#if defined(DEBUG)
+#   if defined(_MSC_VER)
+#       // "(void)0," is for suppressing C4127 warning in "assert(false)", "assert(true)" and the like
+#       define MPASSERT( x )           if ( !((void)0,(x))) { __debugbreak(); } //if ( !(x)) WinDebugBreak()
+#   elif defined (ANDROID_NDK)
+#       include <android/log.h>
+#       define MPASSERT( x )           if ( !(x)) { __android_log_assert( "assert", "grinliz", "ASSERT in '%s' at %d.", __FILE__, __LINE__ ); }
+#   else
+#       include <assert.h>
+#       define MPASSERT                assert
+#   endif
+#   else
+#       define MPASSERT( x )           {}
 #endif
 
 
@@ -69,6 +73,7 @@ distribution.
 	#include <stdlib.h>
 	typedef uintptr_t		MP_UPTR;
 #elif defined (__GNUC__) && (__GNUC__ >= 3 )
+	#include <stdint.h>
 	#include <stdlib.h>
 	typedef uintptr_t		MP_UPTR;
 #else
@@ -203,11 +208,7 @@ namespace micropather
 					float _estToGoal, 
 					PathNode* _parent );
 
-		void Clear() {
-			memset( this, 0, sizeof( PathNode ) );
-			numAdjacent = -1;
-			cacheIndex  = -1;
-		}
+		void Clear();
 		void InitSentinel() {
 			Clear();
 			Init( 0, 0, FLT_MAX, FLT_MAX, 0 );
@@ -302,12 +303,7 @@ namespace micropather
 
 		// Get neighbors from the cache
 		// Note - always access this with an offset. Can get re-allocated.
-		void GetCache( int start, int nNodes, NodeCost* nodes ) {
-			MPASSERT( start >= 0 && start < cacheCap );
-			MPASSERT( nNodes > 0 );
-			MPASSERT( start + nNodes <= cacheCap );
-			memcpy( nodes, &cache[start], sizeof(NodeCost)*nNodes );
-		}
+		void GetCache( int start, int nNodes, NodeCost* nodes );
 
 		// Return all the allocated states. Useful for visuallizing what
 		// the pather is doing.

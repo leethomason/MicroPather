@@ -22,6 +22,7 @@ distribution.
 */
 
 #include <ctype.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <memory.h>
 #include <math.h>
@@ -29,59 +30,44 @@ distribution.
 #include <limits.h>
 
 #include <vector>
+#include <chrono>
 
 #include "micropather.h"
 using namespace micropather;
 
-//#define PROFILING_RUN
-
 #ifdef _MSC_VER
-typedef unsigned __int64 U64;
-#else
-typedef unsigned long long U64;
-#endif
-typedef unsigned int U32;
+#include <Windows.h>
+// The std::chronos high resolution clocks are no where near accurate enough on Windows 10.
+// Many calls come back at 0 time. 
+typedef uint64_t TimePoint;
 
-#ifdef _MSC_VER
-inline U64 FastTime()
+inline uint64_t FastTime()
 {
-	union 
-	{
-		U64 result;
-		struct
-		{
-			U32 lo;
-			U32 hi;
-		} split;
-	} u;
-	u.result = 0;
+	uint64_t t;
+	QueryPerformanceCounter((LARGE_INTEGER*)&t);
+	return t;
+}
 
-	_asm {
-		//pushad;	// don't need - aren't using "emit"
-		cpuid;		// force all previous instructions to complete - else out of order execution can confuse things
-		rdtsc;
-		mov u.split.hi, edx;
-		mov u.split.lo, eax;
-		//popad;
-	}				
-	return u.result;
+inline int64_t Nanoseconds(TimePoint start, TimePoint end)
+{
+	uint64_t freq;
+	QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
+	return (end - start) * 1000 * 1000 * 1000 / freq;
 }
 #else
-#define rdtscll(val)  __asm__ __volatile__ ("rdtsc" : "=A" (val))
-inline U64 FastTime() {
-    U64 val;
- 	rdtscll( val );
- 	return val;     
-}    
+typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;
+
+inline TimePoint FastTime()
+{
+	return std::chrono::high_resolution_clock::now();
+}
+
+inline int64_t Nanoseconds(TimePoint start, TimePoint end)
+{
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+}
 #endif
 
-inline int TimeDiv( U64 time, int count )
-{
-	if ( count == 0 ) count = 1;
-	U64 timePer = time / (U64)count;
-	MPASSERT( timePer < INT_MAX );
-	return (int) timePer / 1000;
-}
 
 const int MAPX = 90;
 const int MAPY = 20;
@@ -144,7 +130,7 @@ class Dungeon : public Graph
 
 	void NodeToXY( void* node, int* x, int* y ) 
 	{
-		int index = (int)node;
+		int index = (int)((intptr_t)node);
 		*y = index / MAPX;
 		*x = index - *y * MAPX;
 	}
@@ -204,18 +190,12 @@ int main( int argc, const char* argv[] )
 {
 	Dungeon dungeon;
 
-	#ifdef PROFILING_RUN
-	const int NUM_TEST = 117;
-	#else
 	const int NUM_TEST = 389;
-	#endif
 	
-	int   indexArray[ NUM_TEST ];
-	float costArray[ NUM_TEST ];
-	U64   timeArray[ NUM_TEST ];
-	int   resultArray[ NUM_TEST ];
-
-	int i;
+	int		indexArray[ NUM_TEST ];	// a bunch of locations to go from-to
+	float	costArray[ NUM_TEST ];
+	int64_t timeArray[ NUM_TEST ];
+	int		resultArray[ NUM_TEST ];
 
 	bool useBinaryHash = false;
 	bool useList = false;
@@ -236,37 +216,45 @@ int main( int argc, const char* argv[] )
 			useList ? "true" : "false",
 			debug ? "true" : "false" );
 					
-	// Set up the test indices. Distribute, then randomize.
-	for( i=0; i<NUM_TEST; ++i ) {
+	// Set up the test locations, making sure they
+	// are all valid.
+	for (int i = 0; i < NUM_TEST; ++i) {
 		indexArray[i] = (MAPX*MAPY) * i / NUM_TEST;
 		costArray[i] = 0.0f;
-		
+
 		int y = indexArray[i] / MAPX;
 		int x = indexArray[i] - MAPX*y;
-		while ( !dungeon.Passable( x, y ) ) {
+		while (!dungeon.Passable(x, y)) {
 			indexArray[i] += 1;
 			y = indexArray[i] / MAPX;
 			x = indexArray[i] - MAPX*y;
 		}
 	}
-	for( i=0; i<NUM_TEST; ++i )
+	// Randomize the locations.
+	for (int i = 0; i < NUM_TEST; ++i)
 	{
-		int swapWith = rand()%NUM_TEST;
+		int swapWith = rand() % NUM_TEST;
 		int temp = indexArray[i];
 		indexArray[i] = indexArray[swapWith];
 		indexArray[swapWith] = temp;
 	}
 
-	int compositeScore = 0;
+	int64_t compositeScore = 0;
 	for ( int numDir=4; numDir<=8; numDir+=4 )
 	{
 		dungeon.maxDir = numDir;
 		dungeon.aStar->Reset();
 
+		static const int SHORT_PATH = 0;
+		static const int MED_PATH	= 1;
+		static const int LONG_PATH  = 2;
+		static const int FAIL_SHORT = 3;
+		static const int FAIL_LONG  = 4;
+
 		for( int reset=0; reset<=1; ++reset )
 		{
-			clock_t clockStart = clock();
-			for( i=0; i<NUM_TEST; ++i ) 
+			TimePoint clockStart = FastTime();
+			for( int i=0; i<NUM_TEST; ++i ) 
 			{
 				if ( reset )
 					dungeon.aStar->Reset();
@@ -274,40 +262,38 @@ int main( int argc, const char* argv[] )
 				int startState = indexArray[i];
 				int endState = indexArray[ (i==(NUM_TEST-1)) ? 0 : i+1];
 
-				U64 start = FastTime();
+				TimePoint start = FastTime();
 				resultArray[i] = dungeon.aStar->Solve( (void*)startState, (void*)endState, &dungeon.path, &costArray[i] );
-				U64 end = FastTime();
+				TimePoint end = FastTime();
 
-				timeArray[i] = end-start;
+				timeArray[i] = Nanoseconds(start, end);
+				MPASSERT(timeArray[i]);
 			}
-			clock_t clockEnd = clock();
+			TimePoint clockEnd = FastTime();
 
 			#ifndef PROFILING_RUN
 			// -------- Results ------------ //
 			const float shortPath = (float)(MAPX / 4);
 			const float medPath = (float)(MAPX / 2 );
 
-			int count[5] = { 0, 0, 0, 0 };	// short, med, long, fail short, fail long
-			U64 time[5] = { 0, 0, 0, 0 };
+			int count[5] = { 0 };	// short, med, long, fail short, fail long
+			int64_t time[5] = { 0 };
 
-			for( i=0; i<NUM_TEST; ++i )
+			for(int i=0; i<NUM_TEST; ++i )
 			{
+				int idx = 0;
 				if ( resultArray[i] == MicroPather::SOLVED ) {
 					if ( costArray[i] < shortPath ) {
-						++count[0];				
-						time[0] += timeArray[i];
+						idx = SHORT_PATH;
 					}
 					else if ( costArray[i] < medPath ) {
-						++count[1];
-						time[1] += timeArray[i];
+						idx = MED_PATH;
 					}
 					else {
-						++count[2];
-						time[2] += timeArray[i];
+						idx = LONG_PATH;
 					}
 				}
 				else if ( resultArray[i] == MicroPather::NO_SOLUTION ) {
-
 					int startState = indexArray[i];
 					int endState = indexArray[ (i==(NUM_TEST-1)) ? 0 : i+1];
 					int startX, startY, endX, endY;
@@ -317,37 +303,36 @@ int main( int argc, const char* argv[] )
 					int distance = abs( startX - endX ) + abs( startY - endY );
 
 					if ( distance < shortPath ) {
-						++count[3];
-						time[3] += timeArray[i];
+						idx = FAIL_SHORT;
 					}
 					else {
-						++count[4];
-						time[4] += timeArray[i];
+						idx = FAIL_LONG;
 					}
 				}
+				count[idx] += 1;
+				time[idx] += timeArray[i];
 			}
 
 			printf( "Average of %d runs. Reset=%s. Dir=%d.\n",
 					NUM_TEST, reset ? "true" : "false", numDir );
-			printf( "short(%4d, cutoff=%.1f)= %d\n", count[0], shortPath, TimeDiv( time[0], count[0] ));
-			printf( "med  (%4d, cutoff=%.1f)= %d\n", count[1], medPath, TimeDiv( time[1], count[1] ));
-			printf( "long (%4d)             = %d\n", count[2], TimeDiv( time[2], count[2] ));
-			printf( "fail (%4d) short       = %d\n", count[3], TimeDiv( time[3], count[3] ));
-			printf( "fail (%4d) long        = %d\n", count[4], TimeDiv( time[4], count[4] ));
+			printf( "short(%4d)       = %7.2f\n", count[0],	double(time[0]) / count[0] * 0.001 );
+			printf( "med  (%4d)       = %7.2f\n", count[1],	double(time[1]) / count[1] * 0.001 );
+			printf( "long (%4d)       = %7.2f\n", count[2],	double(time[2]) / count[2] * 0.001 );
+			printf( "fail short (%4d) = %7.2f\n", count[3],	double(time[3]) / count[3] * 0.001 );
+			printf( "fail long  (%4d) = %7.2f\n", count[4],	double(time[4]) / count[4] * 0.001 );
 
-			int total = 0;
+			int64_t totalTime = 0;
+			int totalCount = 0;
 			for( int k=0; k<5; ++k ) {
-				total += TimeDiv( time[k], count[k] );
+				totalTime += time[k];
+				totalCount += count[k];
 			}	
-			printf( "Average                = %d\n", total / 5 );
-			compositeScore += total;
-
-			//printf( "Average time / test     = %.3f ms\n\n", 1000.0f * float(clockEnd-clockStart)/float( NUM_TEST*CLOCKS_PER_SEC ) );
+			printf( "Average           = %7.2f\n", double(totalTime) / totalCount * 0.001 );
+			compositeScore += totalTime / totalCount;
 			#endif
-            //dungeon.aStar->DumpHashTable();			
 		}
 	}
-	printf( "Composite average = %d\n", compositeScore / (5*4) );
+	printf( "Composite average = %7.2f\n", double(compositeScore) / 4 * 0.001);
 
 	return 0;
 }
