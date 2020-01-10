@@ -391,8 +391,8 @@ namespace micropather
 		const Item* Find( void* start, void* end );
 		
 		Item*	mem;
-		int		allocated;
-		int		nItems;
+		unsigned	allocated;
+		unsigned	nItems;
 	};
 
 	struct CacheData {
